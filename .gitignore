@@ -1,0 +1,36 @@
+# ===================================================
+# Gemini 图片生成器 - Git 忽略规则
+# ===================================================
+
+# 敏感文件 - 绝对不要提交！
+key.json
+*.pem
+*.key
+.env
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+venv/
+env/
+.venv/
+
+# 用户数据
+data/uploads/
+data/generated/
+data/conversations.json
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+.DS_Store
+
+# 测试输出
+test_output.png
+test_search_output.png
+

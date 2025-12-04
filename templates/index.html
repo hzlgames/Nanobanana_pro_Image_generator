@@ -1,0 +1,235 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Gemini Studio - AI 创意工坊</title>
+    <meta name="description" content="基于 Vertex AI 的 Gemini 3 Pro 图片生成应用 - 支持搜索增强、图像编辑、多参考图合成">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;500;600;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/static/css/style.css">
+</head>
+
+<body>
+    <div class="app-layout">
+        <!-- 侧边栏 -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="brand">
+                    <div class="logo-icon">✨</div>
+                    <h1 class="logo-text">Gemini Studio</h1>
+                </div>
+                <button id="newChatBtn" class="btn-new-chat">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+                        <line x1="12" y1="5" x2="12" y2="19"></line>
+                        <line x1="5" y1="12" x2="19" y2="12"></line>
+                    </svg>
+                    <span>开始新创作</span>
+                </button>
+            </div>
+
+            <div class="conversations-scroll">
+                <div class="conversations-list" id="conversationsList">
+                    <!-- 动态加载 -->
+                </div>
+            </div>
+
+            <div class="sidebar-footer">
+                <div class="user-profile">
+                    <div class="avatar">G</div>
+                    <div class="user-info">
+                        <span class="username">创作者</span>
+                        <span class="status">Gemini 3 Pro</span>
+                    </div>
+                </div>
+            </div>
+        </aside>
+
+        <!-- 主内容区 -->
+        <main class="main-content">
+            <!-- 顶部导航 (移动端可见) -->
+            <header class="mobile-header">
+                <button class="btn-menu" id="mobileMenuBtn">
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="3" y1="12" x2="21" y2="12"></line>
+                        <line x1="3" y1="6" x2="21" y2="6"></line>
+                        <line x1="3" y1="18" x2="21" y2="18"></line>
+                    </svg>
+                </button>
+                <span class="mobile-title">Gemini Studio</span>
+            </header>
+
+            <!-- 消息区域 -->
+            <div class="chat-area" id="messagesContainer">
+                <div class="welcome-screen" id="welcomeScreen">
+                    <div class="welcome-content">
+                        <div class="hero-icon">🎨</div>
+                        <h2>释放无限创意</h2>
+                        <p>描述你想象中的画面，Gemini 将为你呈现细节丰富的艺术作品。<br>支持搜索增强、图像编辑、多参考图合成。</p>
+
+                        <div class="feature-grid">
+                            <div class="feature-card">
+                                <span class="icon">⚡</span>
+                                <h3>智能生成</h3>
+                                <p>文字描述即刻转化为高清图像，支持多种尺寸与比例</p>
+                            </div>
+                            <div class="feature-card">
+                                <span class="icon">🔍</span>
+                                <h3>搜索增强</h3>
+                                <p>基于实时搜索结果生成内容，确保信息准确时效</p>
+                            </div>
+                            <div class="feature-card">
+                                <span class="icon">✏️</span>
+                                <h3>图像编辑</h3>
+                                <p>翻译图中文字、风格迁移、局部修改，创意无界限</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="messages-list" id="messagesList">
+                    <!-- 动态加载消息 -->
+                </div>
+            </div>
+
+            <!-- 输入区域 -->
+            <div class="input-section">
+                <div class="input-container">
+                    <!-- 模式选择器 -->
+                    <div class="mode-selector" id="modeSelector">
+                        <button class="mode-btn active" data-mode="standard" title="标准图片生成">
+                            <span class="mode-icon">🖼️</span>
+                            <span>生成</span>
+                        </button>
+                        <button class="mode-btn" data-mode="search" title="基于搜索结果生成">
+                            <span class="mode-icon">🔍</span>
+                            <span>搜索增强</span>
+                        </button>
+                        <button class="mode-btn" data-mode="edit" title="编辑上传的图片">
+                            <span class="mode-icon">✏️</span>
+                            <span>图像编辑</span>
+                        </button>
+                    </div>
+
+                    <!-- 上传文件预览 -->
+                    <div class="uploaded-files-preview" id="uploadedFiles"></div>
+
+                    <div class="input-box">
+                        <button class="btn-icon btn-upload" id="uploadBtn" title="上传参考图">
+                            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                                <circle cx="8.5" cy="8.5" r="1.5"></circle>
+                                <polyline points="21 15 16 10 5 21"></polyline>
+                            </svg>
+                        </button>
+                        <input type="file" id="fileInput" accept="image/*,.pdf" multiple hidden>
+
+                        <textarea id="promptInput" placeholder="描述你想生成的画面，或输入编辑指令..." rows="1"></textarea>
+
+                        <div class="input-actions">
+                            <button class="btn-settings" id="settingsBtn" title="高级设置">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <circle cx="12" cy="12" r="3"></circle>
+                                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                                </svg>
+                            </button>
+
+                            <button class="btn-send" id="sendBtn" title="发送">
+                                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                                    <line x1="22" y1="2" x2="11" y2="13"></line>
+                                    <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
+                                </svg>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- 高级设置面板 -->
+                    <div class="advanced-settings" id="advancedSettings">
+                        <div class="settings-row">
+                            <div class="setting-group">
+                                <label class="setting-label">图片比例</label>
+                                <select id="aspectRatio" class="setting-select">
+                                    <option value="1:1">1:1 正方形</option>
+                                    <option value="16:9">16:9 宽屏</option>
+                                    <option value="9:16">9:16 竖屏</option>
+                                    <option value="4:3">4:3 标准</option>
+                                    <option value="3:4">3:4 纵向</option>
+                                    <option value="3:2">3:2 照片</option>
+                                    <option value="2:3">2:3 肖像</option>
+                                    <option value="4:5">4:5 Instagram</option>
+                                    <option value="5:4">5:4 展示</option>
+                                    <option value="21:9">21:9 超宽</option>
+                                </select>
+                            </div>
+                            <div class="setting-group">
+                                <label class="setting-label">图片尺寸</label>
+                                <select id="imageSize" class="setting-select">
+                                    <option value="1K">1K 标准</option>
+                                    <option value="2K">2K 高清</option>
+                                    <option value="4K">4K 超清</option>
+                                </select>
+                            </div>
+                            <div class="setting-group" id="editTypeGroup" style="display: none;">
+                                <label class="setting-label">编辑类型</label>
+                                <select id="editType" class="setting-select">
+                                    <option value="general">通用编辑</option>
+                                    <option value="translate">文字翻译</option>
+                                    <option value="style">风格迁移</option>
+                                </select>
+                            </div>
+                        </div>
+                        <div class="settings-row" style="margin-top: 14px; padding-top: 14px; border-top: 1px solid var(--glass-border);">
+                            <div class="setting-group" style="flex: none; width: 100%;">
+                                <label class="context-toggle">
+                                    <input type="checkbox" id="enableContext">
+                                    <span class="toggle-slider"></span>
+                                    <span class="toggle-label">启用上下文记忆 <span style="font-weight: 400; color: var(--text-muted);">(会消耗更多算力)</span></span>
+                                </label>
+                                <div style="font-size: 11px; color: var(--text-muted); margin-top: 6px; padding-left: 52px;">
+                                    开启后，AI 将记住当前对话的历史内容，可进行多轮连续对话
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="input-footer">
+                        <span class="model-badge" id="currentModeBadge">🖼️ 标准生成</span>
+                        <span>·</span>
+                        <span>Gemini 3 Pro Image</span>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <!-- 图片查看器 -->
+    <div class="lightbox" id="imageViewer">
+        <div class="lightbox-backdrop" onclick="closeImageViewer()"></div>
+        <div class="lightbox-content">
+            <img id="viewerImage" src="" alt="Full size">
+            <div class="lightbox-controls">
+                <a id="downloadLink" href="" download class="btn-control primary">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
+                        <polyline points="7 10 12 15 17 10"></polyline>
+                        <line x1="12" y1="15" x2="12" y2="3"></line>
+                    </svg>
+                    下载原图
+                </a>
+                <button onclick="closeImageViewer()" class="btn-control">
+                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <line x1="18" y1="6" x2="6" y2="18"></line>
+                        <line x1="6" y1="6" x2="18" y2="18"></line>
+                    </svg>
+                    关闭
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script src="/static/js/main.js"></script>
+</body>
+
+</html>
